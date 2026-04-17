@@ -36,6 +36,6 @@
     "resolveJsonModule": true,
     "moduleResolution": "node"
   },
-  "include": ["src"],
+  "include": ["src", "test/users/users.controller.spec.ts", "test/users/users.service.spec.ts"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }
