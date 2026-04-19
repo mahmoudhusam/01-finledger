@@ -29,8 +29,8 @@ export class UsersService {
     return savedUser;
   }
 
-  async getUserById(id: number): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id } });
+  async getUserById(userId: number): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { userId } });
     // Optionally, you can throw an exception if the user is not found
     if (!user) {
       throw new NotFoundException('User not found');
@@ -38,8 +38,8 @@ export class UsersService {
     return user;
   }
 
-  async updateUser(id: number, updateUserDto: Partial<CreateUserDto>): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id } });
+  async updateUser(userId: number, updateUserDto: Partial<CreateUserDto>): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { userId } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
