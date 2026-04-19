@@ -1,18 +1,59 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-users.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from '@/database/entities/user.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
-  createUser(createUserDto: CreateUserDto) {
-    return `User ${createUserDto.fullName} created successfully`;
+  constructor(
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
+
+  async createUser(createUserDto: CreateUserDto): Promise<User> {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: createUserDto.email },
+    });
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    const user = this.userRepository.create(createUserDto);
+    const savedUser = await this.userRepository.save(user);
+    return savedUser;
   }
 
-  getUserById(id: number) {
-    return `User with ID ${id} retrieved successfully`;
+  async getUserById(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    // Optionally, you can throw an exception if the user is not found
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  updateUser(id: number, _updateUserDto: CreateUserDto) {
-    return `User with ID ${id} updated successfully`;
+  async updateUser(id: number, updateUserDto: Partial<CreateUserDto>): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    Object.assign(user, updateUserDto);
+    const updatedUser = await this.userRepository.save(user);
+    return updatedUser;
+  }
+
+  async findByEmail(email: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    return user;
   }
 }
