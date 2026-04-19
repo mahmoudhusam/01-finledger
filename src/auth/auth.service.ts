@@ -1,6 +1,6 @@
 import { User } from '@/database/entities/user.entity';
 import { CreateUserDto } from '@/users/dto/create-users.dto';
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '@/users/users.service';
@@ -30,5 +30,19 @@ export class AuthService {
       password: hashedPassword,
     });
     return user;
+  }
+
+  async login(email: string, password: string) {
+    try {
+      const user = await this.usersService.findByEmail(email);
+      const isPasswordValid = await this.validatePassword(password, user.password);
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      return user;
+    } catch {
+      throw new UnauthorizedException('Invalid credentials');
+    }
   }
 }
