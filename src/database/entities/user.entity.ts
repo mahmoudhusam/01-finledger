@@ -26,8 +26,8 @@ export class User {
   role: 'user' | 'admin';
 
   @Exclude()
-  @Column({ nullable: true })
-  refresh_token_hash: string;
+  @Column({ type: 'varchar', nullable: true })
+  refresh_token_hash: string | null;
 
   @CreateDateColumn()
   createdAt: Date;
