@@ -40,6 +40,10 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string, userId: number) {
+    //Engineering decision: refresh tokens are storage
+    //current: DB (simple for MVP)
+    //Better for scale: Redis (O(1) lookups, automatic TTL expiry)
+    //Migrate when: >10k DAU or if token refresh becomes a bottleneck
     try {
       const payload = this.jwtService.verify<{ sub: number }>(refreshToken, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
