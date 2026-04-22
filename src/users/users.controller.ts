@@ -1,6 +1,17 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-users.dto';
+import { JwtGuard } from '@/common/guards/jwt.guard';
+import { GetUser } from '@/common/decorators/get-user.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -11,14 +22,25 @@ export class UsersController {
     return this.usersService.createUser(createUserDto);
   }
 
+  @UseGuards(JwtGuard)
   @Get(':id')
-  getUserById(@Param('id') id: number) {
+  getUserById(@Param('id') id: number, @GetUser() user: { userId: number; role: string }) {
+    if (user.userId !== id && user.role !== 'admin') {
+      throw new ForbiddenException('You do not have permission to access this resource');
+    }
     return this.usersService.getUserById(id);
   }
 
-  //update user
+  @UseGuards(JwtGuard)
   @Patch(':id')
-  updateUser(@Param('id') id: number, @Body() updateUserDto: CreateUserDto) {
+  updateUser(
+    @Param('id') id: number,
+    @Body() updateUserDto: CreateUserDto,
+    @GetUser() user: { userId: number; role: string },
+  ) {
+    if (user.userId !== id && user.role !== 'admin') {
+      throw new ForbiddenException('You do not have permission to access this resource');
+    }
     return this.usersService.updateUser(id, updateUserDto);
   }
 }
