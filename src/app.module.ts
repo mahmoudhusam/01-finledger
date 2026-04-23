@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { AccountsModule } from './accounts/accounts.module';
 
 @Module({
   imports: [
@@ -36,6 +37,8 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     UsersModule,
 
     AuthModule,
+
+    AccountsModule,
   ],
   controllers: [AppController],
   providers: [
