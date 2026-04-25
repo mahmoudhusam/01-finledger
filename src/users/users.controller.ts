@@ -17,7 +17,7 @@ import { GetUser } from '@/common/decorators/get-user.decorator';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post('create')
+  @Post()
   createUser(@Body() createUserDto: CreateUserDto) {
     return this.usersService.createUser(createUserDto);
   }
