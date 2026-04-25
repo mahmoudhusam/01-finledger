@@ -1,12 +1,13 @@
+import { AccountType } from '@/database/entities/account.entity';
 import { IsEnum, IsInt, IsNotEmpty, Length, Min } from 'class-validator';
 
 export class CreateAccountDto {
   @IsNotEmpty()
-  name: string;
+  accountName: string;
 
   @IsNotEmpty()
-  @IsEnum(['CHECKING', 'SAVINGS', 'CRYPTO'])
-  type: 'CHECKING' | 'SAVINGS' | 'CRYPTO';
+  @IsEnum(AccountType)
+  accountType: AccountType;
 
   @IsNotEmpty()
   @Length(3, 3)
