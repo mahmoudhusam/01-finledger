@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AccountsModule } from './accounts/accounts.module';
+import { TransferModule } from './transfer/transfer.module';
 
 @Module({
   imports: [
@@ -39,6 +40,8 @@ import { AccountsModule } from './accounts/accounts.module';
     AuthModule,
 
     AccountsModule,
+
+    TransferModule,
   ],
   controllers: [AppController],
   providers: [
