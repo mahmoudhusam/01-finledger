@@ -12,7 +12,7 @@ import { Result } from '@/common/types/result.type';
 export class AccountsService {
   private readonly baseRepository: BaseRepository<Account>;
   constructor(@InjectRepository(Account) private readonly accountRepository: Repository<Account>) {
-    this.baseRepository = new BaseRepository(this.accountRepository);
+    this.baseRepository = new BaseRepository(this.accountRepository, 'accountId');
   }
 
   async createAccount(
