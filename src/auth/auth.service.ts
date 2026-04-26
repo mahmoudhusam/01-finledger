@@ -39,7 +39,7 @@ export class AuthService {
     });
   }
 
-  async refresh(refreshToken: string, userId: number) {
+  async refresh(refreshToken: string) {
     //Engineering decision: refresh tokens are storage
     //current: DB (simple for MVP)
     //Better for scale: Redis (O(1) lookups, automatic TTL expiry)
@@ -48,23 +48,18 @@ export class AuthService {
       const payload = this.jwtService.verify<{ sub: number }>(refreshToken, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
-      if (payload.sub !== userId) {
-        throw new UnauthorizedException('Invalid refresh token');
-      }
-      const user = await this.usersService.getUserById(userId);
-      if (!user || !user.refresh_token_hash) {
-        throw new UnauthorizedException('Invalid refresh token');
-      }
-      const isRefreshTokenValid = await this.validatePassword(
-        refreshToken,
-        user.refresh_token_hash,
-      );
-      if (!isRefreshTokenValid) {
+      const user = await this.usersService.getUserById(payload.sub);
+      if (!user?.refresh_token_hash) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      const accessToken = this.generateAccessToken(user.userId, user.email, user.role);
-      return { accessToken };
+      const isValid = await bcrypt.compare(refreshToken, user.refresh_token_hash);
+
+      if (!isValid) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      return { accessToken: this.generateAccessToken(user.userId, user.email, user.role) };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error; // Re-throw our custom errors

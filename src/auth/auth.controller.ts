@@ -20,10 +20,9 @@ export class AuthController {
     return this.authService.login(loginDto.email, loginDto.password);
   }
 
-  @UseGuards(JwtGuard)
   @Post('refresh')
-  async refresh(@Body() refreshDto: RefreshDto, @GetUser() user: { userId: number }) {
-    return this.authService.refresh(refreshDto.refreshToken, user.userId);
+  async refresh(@Body() refreshDto: RefreshDto) {
+    return this.authService.refresh(refreshDto.refreshToken);
   }
 
   @UseGuards(JwtGuard)
