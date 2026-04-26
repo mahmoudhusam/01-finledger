@@ -15,7 +15,7 @@ export enum Status {
 }
 
 @Entity()
-export class Transaction {
+export class Transfer {
   @PrimaryGeneratedColumn()
   transactionId: number;
 
