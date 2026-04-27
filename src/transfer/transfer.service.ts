@@ -57,6 +57,7 @@ export class TransferService {
       await queryRunner.commitTransaction();
 
       transfer.status = Status.COMPLETED;
+      await queryRunner.manager.save(transfer);
 
       return transfer;
     } catch (error) {
