@@ -2,15 +2,20 @@ import { Account } from '@/database/entities/account.entity';
 import { Status, Transfer } from '@/database/entities/transaction.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateTransferDto } from './dto/create-transfer.dto';
+import { BaseRepository } from '@/common/repositories/base.repository';
 
 @Injectable()
 export class TransferService {
+  private readonly baseRepository: BaseRepository<Transfer>;
+
   constructor(
-    @InjectRepository(Transfer)
+    @InjectRepository(Transfer) private readonly transferRepository: Repository<Transfer>,
     private readonly dataSource: DataSource,
-  ) {}
+  ) {
+    this.baseRepository = new BaseRepository(this.transferRepository, 'transactionId');
+  }
 
   async transfer(createTransferDto: CreateTransferDto) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -50,14 +55,11 @@ export class TransferService {
         toAccountId,
         amount,
         currency,
-        status: Status.PENDING,
+        status: Status.COMPLETED,
       });
       await queryRunner.manager.save(transfer);
 
       await queryRunner.commitTransaction();
-
-      transfer.status = Status.COMPLETED;
-      await queryRunner.manager.save(transfer);
 
       return transfer;
     } catch (error) {
@@ -66,5 +68,20 @@ export class TransferService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async listTransfers(limit: number = 10, cursor?: string) {
+    const paginatedResult = await this.baseRepository.findWithPagination({}, { limit, cursor });
+    return paginatedResult;
+  }
+
+  async getTransferById(id: number) {
+    const transfer = await this.dataSource.getRepository(Transfer).findOne({
+      where: { transactionId: id },
+    });
+    if (!transfer) {
+      throw new NotFoundException('Transfer not found');
+    }
+    return transfer;
   }
 }
