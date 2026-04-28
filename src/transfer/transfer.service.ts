@@ -1,6 +1,6 @@
 import { Account } from '@/database/entities/account.entity';
 import { Status, Transfer } from '@/database/entities/transaction.entity';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CreateTransferDto } from './dto/create-transfer.dto';
@@ -17,19 +17,19 @@ export class TransferService {
     this.baseRepository = new BaseRepository(this.transferRepository, 'transactionId');
   }
 
-  async transfer(createTransferDto: CreateTransferDto) {
+  async transfer(createTransferDto: CreateTransferDto, userId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.startTransaction();
     try {
       const { fromAccountId, toAccountId, amount, currency } = createTransferDto;
 
       const fromAccount = await queryRunner.manager.findOne(Account, {
-        where: { accountId: fromAccountId },
+        where: { accountId: fromAccountId, userId: userId },
         lock: { mode: 'pessimistic_write' },
       });
 
       if (!fromAccount) {
-        throw new NotFoundException('Sender account not found');
+        throw new UnauthorizedException('You do not own this account');
       }
       if (fromAccount.balance < amount) {
         throw new NotFoundException('Insufficient balance');
@@ -70,14 +70,17 @@ export class TransferService {
     }
   }
 
-  async listTransfers(limit: number = 10, cursor?: string) {
-    const paginatedResult = await this.baseRepository.findWithPagination({}, { limit, cursor });
+  async listTransfers(userId: number, limit: number = 10, cursor?: string) {
+    const paginatedResult = await this.baseRepository.findWithPagination(
+      { fromAccount: { userId } },
+      { limit, cursor },
+    );
     return paginatedResult;
   }
 
-  async getTransferById(id: number) {
+  async getTransferById(id: number, userId: number) {
     const transfer = await this.dataSource.getRepository(Transfer).findOne({
-      where: { transactionId: id },
+      where: { transactionId: id, fromAccount: { userId } },
     });
     if (!transfer) {
       throw new NotFoundException('Transfer not found');
