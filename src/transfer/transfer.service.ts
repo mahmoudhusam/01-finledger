@@ -71,20 +71,44 @@ export class TransferService {
   }
 
   async listTransfers(userId: number, limit: number = 10, cursor?: string) {
-    const paginatedResult = await this.baseRepository.findWithPagination(
-      { fromAccount: { userId } },
-      { limit, cursor },
-    );
-    return paginatedResult;
+    const queryBuilder = this.transferRepository
+      .createQueryBuilder('transfer')
+      .innerJoinAndSelect('transfer.fromAccount', 'fromAccount')
+      .innerJoinAndSelect('transfer.toAccount', 'toAccount')
+      .where('fromAccount.userId = :userId', { userId })
+      .orWhere('toAccount.userId = :userId', { userId });
+
+    if (cursor) {
+      queryBuilder.andWhere('transfer.transactionId > :cursor', { cursor: parseInt(cursor, 10) });
+    }
+
+    const items = await queryBuilder
+      .orderBy('transfer.transactionId', 'ASC')
+      .limit(limit + 1)
+      .getMany();
+
+    const hasMore = items.length > limit;
+    const paginatedItems = hasMore ? items.slice(0, -1) : items;
+    const nextCursor = hasMore
+      ? String(paginatedItems[paginatedItems.length - 1].transactionId)
+      : undefined;
+
+    return { items: paginatedItems, cursor: nextCursor, hasMore, count: paginatedItems.length };
   }
 
   async getTransferById(id: number, userId: number) {
-    const transfer = await this.dataSource.getRepository(Transfer).findOne({
-      where: { transactionId: id, fromAccount: { userId } },
-    });
+    const transfer = await this.transferRepository
+      .createQueryBuilder('transfer')
+      .innerJoinAndSelect('transfer.fromAccount', 'fromAccount')
+      .innerJoinAndSelect('transfer.toAccount', 'toAccount')
+      .where('transfer.transactionId = :id', { id })
+      .andWhere('(fromAccount.userId = :userId OR toAccount.userId = :userId)', { userId })
+      .getOne();
+
     if (!transfer) {
       throw new NotFoundException('Transfer not found');
     }
+
     return transfer;
   }
 }
