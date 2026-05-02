@@ -1,14 +1,25 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { TransferService } from './transfer.service';
 import { CreateTransferDto } from './dto/create-transfer.dto';
 import { JwtGuard } from '@/common/guards/jwt.guard';
 import { GetUser } from '@/common/decorators/get-user.decorator';
+import { IdempotencyInterceptor } from '@/common/interceptors/idempotency.interceptor';
 
 @UseGuards(JwtGuard)
 @Controller('transfer')
 export class TransferController {
   constructor(private readonly transferService: TransferService) {}
 
+  @UseInterceptors(IdempotencyInterceptor)
   @Post()
   async transfer(
     @Body() createTransferDto: CreateTransferDto,

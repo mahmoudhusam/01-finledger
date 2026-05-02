@@ -1,4 +1,3 @@
-//createAuditLog helper method to create an audit log entry for a transfer
 import { AuditEventType, AuditLog } from '@/database/entities/audit-log.entity';
 import { QueryRunner } from 'typeorm';
 
