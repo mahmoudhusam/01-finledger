@@ -41,7 +41,9 @@
     "test/users/users.controller.spec.ts",
     "test/users/users.service.spec.ts",
     "test/transfer/transfer.service.spec.ts",
-    "test/transfer/transfer.controller.spec.ts"
+    "test/transfer/transfer.controller.spec.ts",
+    "test/webhooks/webhooks.service.spec.ts",
+    "test/webhooks/webhooks.controller.spec.ts"
   ],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }

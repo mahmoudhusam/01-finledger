@@ -10,6 +10,7 @@ import { ClassSerializerInterceptor } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AccountsModule } from './accounts/accounts.module';
 import { TransferModule } from './transfer/transfer.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -42,6 +43,8 @@ import { TransferModule } from './transfer/transfer.module';
     AccountsModule,
 
     TransferModule,
+
+    WebhooksModule,
   ],
   controllers: [AppController],
   providers: [
