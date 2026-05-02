@@ -5,6 +5,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CreateTransferDto } from './dto/create-transfer.dto';
 import { BaseRepository } from '@/common/repositories/base.repository';
+import { AuditEventType, AuditLog } from '@/database/entities/audit-log.entity';
+import { createAuditLog } from '@/utils/helpers';
 
 @Injectable()
 export class TransferService {
@@ -12,6 +14,7 @@ export class TransferService {
 
   constructor(
     @InjectRepository(Transfer) private readonly transferRepository: Repository<Transfer>,
+    @InjectRepository(AuditLog) private readonly auditLogRepository: Repository<AuditLog>,
     private readonly dataSource: DataSource,
   ) {
     this.baseRepository = new BaseRepository(this.transferRepository, 'transactionId');
@@ -58,7 +61,23 @@ export class TransferService {
         status: Status.COMPLETED,
       });
       await queryRunner.manager.save(transfer);
+      await createAuditLog(
+        queryRunner,
+        fromAccountId,
+        AuditEventType.DEBIT,
+        fromAccount.balance + amount,
+        fromAccount.balance,
+        transfer.transactionId,
+      );
 
+      await createAuditLog(
+        queryRunner,
+        toAccountId,
+        AuditEventType.CREDIT,
+        toAccount.balance - amount,
+        toAccount.balance,
+        transfer.transactionId,
+      );
       await queryRunner.commitTransaction();
 
       return transfer;
