@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum AuditEventType {
   DEBIT = 'debit',
@@ -11,18 +11,22 @@ export class AuditLog {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @Column()
-  accountId: number;
+  readonly accountId: number;
 
   @Column()
-  eventType: AuditEventType;
+  readonly eventType: AuditEventType;
 
   @Column({ type: 'int' })
-  amount: number;
+  readonly amountBefore: number;
+
+  @Column({ type: 'int' })
+  readonly amountAfter: number;
 
   @CreateDateColumn()
   timestamp: Date;
 
   @Column({ nullable: true })
-  transferId: number;
+  readonly referenceId: number;
 }

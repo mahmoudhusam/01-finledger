@@ -5,10 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Transfer } from '@/database/entities/transaction.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuditLog } from '@/database/entities/audit-log.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Transfer]),
+    TypeOrmModule.forFeature([Transfer, AuditLog]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
