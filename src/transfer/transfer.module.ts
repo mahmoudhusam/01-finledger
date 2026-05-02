@@ -6,6 +6,7 @@ import { Transfer } from '@/database/entities/transaction.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuditLog } from '@/database/entities/audit-log.entity';
+import { CommonModule } from '@/common/common.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AuditLog } from '@/database/entities/audit-log.entity';
         signOptions: { expiresIn: '15m' },
       }),
     }),
+    CommonModule,
   ],
   controllers: [TransferController],
   providers: [TransferService],
