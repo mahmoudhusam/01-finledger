@@ -37,7 +37,7 @@ export class Transfer {
   @Column({ type: 'enum', enum: Status })
   status: Status;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   note: string | null;
 
   @CreateDateColumn()
