@@ -27,6 +27,6 @@ export class AuditLog {
   @CreateDateColumn()
   timestamp: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   readonly referenceId: number | null;
 }
