@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  ConflictException,
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
@@ -30,6 +31,9 @@ export class AccountsController {
     if (!result.success) {
       if (result.code === 'NOT_FOUND') {
         throw new NotFoundException(result.error);
+      }
+      if (result.code === 'CONFLICT') {
+        throw new ConflictException(result.error);
       }
       throw new InternalServerErrorException(result.error);
     }

@@ -8,6 +8,7 @@ import {
   Query,
   UseGuards,
   UseInterceptors,
+  HttpStatus,
 } from '@nestjs/common';
 import { TransferService } from './transfer.service';
 import { CreateTransferDto } from './dto/create-transfer.dto';
@@ -31,7 +32,11 @@ export class TransferController {
 
   @Get()
   async listTransfers(
-    @Query('limit', ParseIntPipe) limit?: number,
+    @Query(
+      'limit',
+      new ParseIntPipe({ optional: true, errorHttpStatusCode: HttpStatus.BAD_REQUEST }),
+    )
+    limit?: number,
     @Query('cursor') cursor?: string,
     @GetUser() user?: { userId: number },
   ) {

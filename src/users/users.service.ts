@@ -8,6 +8,7 @@ import { CreateUserDto } from './dto/create-users.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '@/database/entities/user.entity';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -24,14 +25,14 @@ export class UsersService {
       throw new ConflictException('User with this email already exists');
     }
 
-    const user = this.userRepository.create(createUserDto);
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const user = this.userRepository.create({ ...createUserDto, password: hashedPassword });
     const savedUser = await this.userRepository.save(user);
     return savedUser;
   }
 
   async getUserById(userId: number): Promise<User> {
     const user = await this.userRepository.findOne({ where: { userId } });
-    // Optionally, you can throw an exception if the user is not found
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -42,6 +43,9 @@ export class UsersService {
     const user = await this.userRepository.findOne({ where: { userId } });
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+    if (updateUserDto.password) {
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
     }
     Object.assign(user, updateUserDto);
     const updatedUser = await this.userRepository.save(user);

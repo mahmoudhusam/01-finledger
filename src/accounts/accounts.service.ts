@@ -2,7 +2,7 @@ import { BaseRepository } from '@/common/repositories/base.repository';
 import { Account } from '@/database/entities/account.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { PaginatedResult } from '@/common/types/paginated-result.type';
 import { UpdateAccountDto } from './dto/update-account.dto';
@@ -23,7 +23,15 @@ export class AccountsService {
       const account = this.accountRepository.create({ ...createAccountDto, userId, balance: 0 });
       const savedAccount = await this.accountRepository.save(account);
       return { success: true, data: savedAccount };
-    } catch {
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (error instanceof QueryFailedError && (error as any).code === '23505') {
+        return {
+          success: false,
+          error: 'An Account with this name already exists',
+          code: 'CONFLICT',
+        };
+      }
       return { success: false, error: 'Failed to create account', code: 'INTERNAL_ERROR' };
     }
   }
