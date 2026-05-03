@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Query,
   UseGuards,
@@ -30,11 +31,13 @@ export class TransferController {
 
   @Get()
   async listTransfers(
-    @Query() params: { limit?: number; cursor?: string },
-    @GetUser() user: { userId: number },
+    @Query('limit', ParseIntPipe) limit?: number,
+    @Query('cursor') cursor?: string,
+    @GetUser() user?: { userId: number },
   ) {
-    return this.transferService.listTransfers(user.userId, params.limit, params.cursor);
+    return this.transferService.listTransfers(user!.userId, limit, cursor);
   }
+
   @Get(':id')
   async getTransferById(@Param('id') id: string, @GetUser() user: { userId: number }) {
     return this.transferService.getTransferById(parseInt(id), user.userId);

@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   UseGuards,
@@ -24,7 +25,10 @@ export class UsersController {
 
   @UseGuards(JwtGuard)
   @Get(':id')
-  getUserById(@Param('id') id: number, @GetUser() user: { userId: number; role: string }) {
+  getUserById(
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser() user: { userId: number; role: string },
+  ) {
     if (user.userId !== id && user.role !== 'admin') {
       throw new ForbiddenException('You do not have permission to access this resource');
     }
@@ -34,7 +38,7 @@ export class UsersController {
   @UseGuards(JwtGuard)
   @Patch(':id')
   updateUser(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: CreateUserDto,
     @GetUser() user: { userId: number; role: string },
   ) {

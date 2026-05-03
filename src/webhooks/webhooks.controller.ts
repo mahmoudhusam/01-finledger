@@ -9,7 +9,7 @@ export class WebhooksController {
   @Post('deposit')
   async processDeposit(
     @Body() createWebhookDepositDto: CreateWebhookDepositDto,
-    @Headers('x-webhook-signature') signature: string,
+    @Headers('x-webhook-signature') signature: string | undefined,
   ) {
     return await this.webhooksService.processDeposit(createWebhookDepositDto, signature);
   }

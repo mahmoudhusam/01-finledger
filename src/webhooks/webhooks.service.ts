@@ -1,6 +1,11 @@
 import { Account } from '@/database/entities/account.entity';
 import { AuditEventType } from '@/database/entities/audit-log.entity';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { CreateWebhookDepositDto } from './dto/create-webhook-deposit.dto';
 import * as crypto from 'crypto';
@@ -17,7 +22,10 @@ export class WebhooksService {
     this.webhookSecret = this.configService.getOrThrow<string>('WEBHOOK_SECRET');
   }
 
-  async processDeposit(createWebhookDepositDto: CreateWebhookDepositDto, signature: string) {
+  async processDeposit(
+    createWebhookDepositDto: CreateWebhookDepositDto,
+    signature: string | undefined,
+  ) {
     const { amount, toAccountId } = createWebhookDepositDto;
 
     if (!this.verifySignature(createWebhookDepositDto, signature)) {
@@ -34,7 +42,7 @@ export class WebhooksService {
       });
 
       if (!account) {
-        throw new Error('Account not found');
+        throw new NotFoundException('Account not found');
       }
 
       account.balance += amount;
@@ -52,14 +60,16 @@ export class WebhooksService {
       return { success: true, data: account };
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      if (error instanceof HttpException) throw error;
+      const errorMessage = error instanceof Error ? error.message : 'Internal server error';
       return { success: false, error: errorMessage, code: 'INTERNAL_ERROR' };
     } finally {
       await queryRunner.release();
     }
   }
 
-  private verifySignature(dto: CreateWebhookDepositDto, signature: string): boolean {
+  private verifySignature(dto: CreateWebhookDepositDto, signature: string | undefined): boolean {
+    if (!signature) return false;
     const { amount, currency, toAccountId } = dto;
     const payload = JSON.stringify({ amount, currency, toAccountId });
     const hash = crypto.createHmac('sha256', this.webhookSecret).update(payload).digest('hex');

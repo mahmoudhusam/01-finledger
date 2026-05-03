@@ -1,5 +1,5 @@
 import { IsNotEqualToConstraint } from '@/common/decorators/notEqualToConstraint.decorator';
-import { IsInt, IsNotEmpty, IsString, Min, Validate } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Min, Validate } from 'class-validator';
 
 export class CreateTransferDto {
   @IsNotEmpty()
@@ -19,5 +19,7 @@ export class CreateTransferDto {
   @IsString()
   currency: string;
 
+  @IsOptional()
+  @IsString()
   note?: string;
 }

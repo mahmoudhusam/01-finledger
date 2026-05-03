@@ -1,17 +1,13 @@
 import { Account } from '@/database/entities/account.entity';
 import { Status, Transfer } from '@/database/entities/transaction.entity';
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CreateTransferDto } from './dto/create-transfer.dto';
 import { BaseRepository } from '@/common/repositories/base.repository';
 import { AuditEventType, AuditLog } from '@/database/entities/audit-log.entity';
 import { createAuditLog } from '@/utils/helpers';
+import { Brackets } from 'typeorm';
 
 @Injectable()
 export class TransferService {
@@ -61,7 +57,7 @@ export class TransferService {
       }
 
       if (fromAccount.balance < amount) {
-        throw new UnprocessableEntityException('Insufficient balance');
+        throw new BadRequestException('Insufficient balance');
       }
 
       fromAccount.balance -= amount;
@@ -75,6 +71,7 @@ export class TransferService {
         toAccountId,
         amount,
         currency,
+        note: createTransferDto.note ?? null,
         status: Status.COMPLETED,
       });
       await queryRunner.manager.save(transfer);
@@ -112,7 +109,14 @@ export class TransferService {
       .createQueryBuilder('transfer')
       .innerJoinAndSelect('transfer.fromAccount', 'fromAccount')
       .innerJoinAndSelect('transfer.toAccount', 'toAccount')
-      .where('fromAccount.userId = :userId OR toAccount.userId = :userId', { userId });
+      .where(
+        new Brackets((qb) => {
+          qb.where('fromAccount.userId = :userId', { userId }).orWhere(
+            'toAccount.userId = :userId',
+            { userId },
+          );
+        }),
+      );
 
     if (cursor) {
       queryBuilder.andWhere('transfer.transactionId > :cursor', { cursor: parseInt(cursor, 10) });
