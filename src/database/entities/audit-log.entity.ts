@@ -15,7 +15,7 @@ export class AuditLog {
   @Column()
   readonly accountId: number;
 
-  @Column()
+  @Column({ type: 'enum', enum: AuditEventType })
   readonly eventType: AuditEventType;
 
   @Column({ type: 'int' })
@@ -28,5 +28,5 @@ export class AuditLog {
   timestamp: Date;
 
   @Column({ nullable: true })
-  readonly referenceId: number;
+  readonly referenceId: number | null;
 }

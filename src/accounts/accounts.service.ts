@@ -20,7 +20,7 @@ export class AccountsService {
     userId: number,
   ): Promise<Result<Account>> {
     try {
-      const account = this.accountRepository.create({ ...createAccountDto, userId });
+      const account = this.accountRepository.create({ ...createAccountDto, userId, balance: 0 });
       const savedAccount = await this.accountRepository.save(account);
       return { success: true, data: savedAccount };
     } catch {

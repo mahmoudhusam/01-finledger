@@ -36,7 +36,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     await this.client.del(key);
   }
 
-  private async checkRedis(key: string, response: string): Promise<void> {
-    await this.client.set(key, response, { EX: 86400 });
+  async setNx(key: string, value: string, ttlSeconds: number): Promise<boolean> {
+    const result = await this.client.set(key, value, { EX: ttlSeconds, NX: true });
+    return result === 'OK';
   }
 }

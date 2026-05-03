@@ -3,25 +3,13 @@ import { TransferService } from './transfer.service';
 import { TransferController } from './transfer.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Transfer } from '@/database/entities/transaction.entity';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from '@/auth/auth.module';
 import { AuditLog } from '@/database/entities/audit-log.entity';
-import { CommonModule } from '@/common/common.module';
+import { IdempotencyInterceptor } from '@/common/interceptors/idempotency.interceptor';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Transfer, AuditLog]),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '15m' },
-      }),
-    }),
-    CommonModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Transfer, AuditLog]), AuthModule],
   controllers: [TransferController],
-  providers: [TransferService],
+  providers: [TransferService, IdempotencyInterceptor],
 })
 export class TransferModule {}

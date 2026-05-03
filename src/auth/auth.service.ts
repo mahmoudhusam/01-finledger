@@ -15,28 +15,25 @@ export class AuthService {
   ) {}
 
   private async hashPassword(password: string): Promise<string> {
-    const hashPassword = await bcrypt.hash(password, 10);
-    return hashPassword;
+    return await bcrypt.hash(password, 10);
   }
 
   private async validatePassword(password: string, hashPassword: string): Promise<boolean> {
-    const isValid = await bcrypt.compare(password, hashPassword);
-    return isValid;
+    return await bcrypt.compare(password, hashPassword);
   }
 
   private generateAccessToken(userId: number, email: string, role: string) {
-    const payload = { sub: userId, email, role };
-
-    return this.jwtService.sign(payload);
+    return this.jwtService.sign({ sub: userId, email, role });
   }
 
   private generateRefreshToken(userId: number) {
-    const payload = { sub: userId };
-
-    return this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      expiresIn: '7d',
-    });
+    return this.jwtService.sign(
+      { sub: userId },
+      {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+        expiresIn: '7d',
+      },
+    );
   }
 
   async refresh(refreshToken: string) {
@@ -59,22 +56,26 @@ export class AuthService {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      return { accessToken: this.generateAccessToken(user.userId, user.email, user.role) };
+      const newRefreshToken = this.generateRefreshToken(user.userId);
+      const hashedRefreshToken = await this.hashPassword(newRefreshToken);
+      await this.usersService.updateUser(user.userId, { refresh_token_hash: hashedRefreshToken });
+
+      return {
+        accessToken: this.generateAccessToken(user.userId, user.email, user.role),
+        refreshToken: newRefreshToken,
+      };
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw error; // Re-throw our custom errors
-      }
-      throw new UnauthorizedException('Invalid refresh token'); // Catch JWT errors
+      if (error instanceof UnauthorizedException) throw error;
+      throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
   async register(createUserDto: CreateUserDto): Promise<User> {
     const hashedPassword = await this.hashPassword(createUserDto.password);
-    const user = await this.usersService.createUser({
+    return await this.usersService.createUser({
       ...createUserDto,
       password: hashedPassword,
     });
-    return user;
   }
 
   async login(email: string, password: string) {
@@ -93,7 +94,8 @@ export class AuthService {
       await this.usersService.updateUser(user.userId, { refresh_token_hash: hashedRefreshToken });
 
       return { accessToken, refreshToken };
-    } catch {
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
       throw new UnauthorizedException('Invalid credentials');
     }
   }

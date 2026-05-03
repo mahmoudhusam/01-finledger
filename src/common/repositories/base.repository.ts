@@ -23,7 +23,7 @@ export class BaseRepository<T extends ObjectLiteral> {
     });
 
     if (whereConditions.length > 0) {
-      queryBuilder.where(whereConditions.join(' OR '), params);
+      queryBuilder.where(whereConditions.join(' AND '), params);
     }
 
     if (options.cursor) {

@@ -1,6 +1,11 @@
 import { Account } from '@/database/entities/account.entity';
 import { Status, Transfer } from '@/database/entities/transaction.entity';
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CreateTransferDto } from './dto/create-transfer.dto';
@@ -22,33 +27,45 @@ export class TransferService {
 
   async transfer(createTransferDto: CreateTransferDto, userId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
       const { fromAccountId, toAccountId, amount, currency } = createTransferDto;
 
-      const fromAccount = await queryRunner.manager.findOne(Account, {
-        where: { accountId: fromAccountId, userId: userId },
+      const [firstId, secondId] =
+        fromAccountId < toAccountId ? [fromAccountId, toAccountId] : [toAccountId, fromAccountId];
+
+      const firstAccount = await queryRunner.manager.findOne(Account, {
+        where: { accountId: firstId },
         lock: { mode: 'pessimistic_write' },
       });
 
-      if (!fromAccount) {
-        throw new UnauthorizedException('You do not own this account');
-      }
-      if (fromAccount.balance < amount) {
-        throw new NotFoundException('Insufficient balance');
-      }
-
-      fromAccount.balance -= amount;
-      await queryRunner.manager.save(fromAccount);
-
-      const toAccount = await queryRunner.manager.findOne(Account, {
-        where: { accountId: toAccountId },
+      const secondAccount = await queryRunner.manager.findOne(Account, {
+        where: { accountId: secondId },
         lock: { mode: 'pessimistic_write' },
       });
+
+      const fromAccount = fromAccountId === firstId ? firstAccount : secondAccount;
+      const toAccount = toAccountId === firstId ? firstAccount : secondAccount;
+
+      if (!fromAccount || fromAccount.userId !== userId) {
+        throw new NotFoundException('Account not found');
+      }
 
       if (!toAccount) {
         throw new NotFoundException('Recipient account not found');
       }
+
+      if (fromAccount.currency !== toAccount.currency || fromAccount.currency !== currency) {
+        throw new BadRequestException('Currency mismatch between accounts');
+      }
+
+      if (fromAccount.balance < amount) {
+        throw new UnprocessableEntityException('Insufficient balance');
+      }
+
+      fromAccount.balance -= amount;
+      await queryRunner.manager.save(fromAccount);
 
       toAccount.balance += amount;
       await queryRunner.manager.save(toAccount);
@@ -61,6 +78,7 @@ export class TransferService {
         status: Status.COMPLETED,
       });
       await queryRunner.manager.save(transfer);
+
       await createAuditLog(
         queryRunner,
         fromAccountId,
@@ -78,8 +96,8 @@ export class TransferService {
         toAccount.balance,
         transfer.transactionId,
       );
-      await queryRunner.commitTransaction();
 
+      await queryRunner.commitTransaction();
       return transfer;
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -94,8 +112,7 @@ export class TransferService {
       .createQueryBuilder('transfer')
       .innerJoinAndSelect('transfer.fromAccount', 'fromAccount')
       .innerJoinAndSelect('transfer.toAccount', 'toAccount')
-      .where('fromAccount.userId = :userId', { userId })
-      .orWhere('toAccount.userId = :userId', { userId });
+      .where('fromAccount.userId = :userId OR toAccount.userId = :userId', { userId });
 
     if (cursor) {
       queryBuilder.andWhere('transfer.transactionId > :cursor', { cursor: parseInt(cursor, 10) });

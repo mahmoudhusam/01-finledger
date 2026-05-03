@@ -3,21 +3,10 @@ import { AccountsService } from './accounts.service';
 import { AccountsController } from './accounts.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Account } from '@/database/entities/account.entity';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from '@/auth/auth.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Account]),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '15m' },
-      }),
-    }),
-  ],
+  imports: [TypeOrmModule.forFeature([Account]), AuthModule],
   controllers: [AccountsController],
   providers: [AccountsService],
 })

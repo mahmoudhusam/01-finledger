@@ -15,7 +15,6 @@ export enum AccountType {
   CRYPTO = 'crypto',
 }
 
-@Index(['accountId', 'userId'])
 @Index(['userId', 'accountName'], { unique: true })
 @Entity()
 export class Account {

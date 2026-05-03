@@ -11,6 +11,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AccountsModule } from './accounts/accounts.module';
 import { TransferModule } from './transfer/transfer.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
+import { RedisModule } from './common/redis/redis.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     TransferModule,
 
     WebhooksModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [

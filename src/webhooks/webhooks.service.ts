@@ -1,24 +1,31 @@
 import { Account } from '@/database/entities/account.entity';
 import { AuditEventType } from '@/database/entities/audit-log.entity';
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { CreateWebhookDepositDto } from './dto/create-webhook-deposit.dto';
 import * as crypto from 'crypto';
 import { createAuditLog } from '@/utils/helpers';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class WebhooksService {
-  constructor(private readonly dataSource: DataSource) {}
+  private readonly webhookSecret: string;
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly configService: ConfigService,
+  ) {
+    this.webhookSecret = this.configService.getOrThrow<string>('WEBHOOK_SECRET');
+  }
 
-  async processDeposit(createWebhookDepositDto: CreateWebhookDepositDto) {
-    const { amount, toAccountId, signature } = createWebhookDepositDto;
+  async processDeposit(createWebhookDepositDto: CreateWebhookDepositDto, signature: string) {
+    const { amount, toAccountId } = createWebhookDepositDto;
 
-    const isValidSignature = this.verifySignature(createWebhookDepositDto, signature);
-    if (!isValidSignature) {
-      return { success: false, error: 'Invalid signature', code: 'UNAUTHORIZED' };
+    if (!this.verifySignature(createWebhookDepositDto, signature)) {
+      throw new UnauthorizedException('Invalid webhook signature');
     }
 
     const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
       const account = await queryRunner.manager.findOne(Account, {
@@ -52,15 +59,15 @@ export class WebhooksService {
     }
   }
 
-  private verifySignature(
-    createWebhookDepositDto: CreateWebhookDepositDto,
-    signature: string,
-  ): boolean {
-    const secret = process.env.WEBHOOK_SECRET || 'default_secret';
-    const { amount, currency, toAccountId } = createWebhookDepositDto;
-    const bodyWithoutSignature = { amount, currency, toAccountId };
-    const payload = JSON.stringify(bodyWithoutSignature);
-    const hash = crypto.createHmac('sha256', secret).update(payload).digest('hex');
-    return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(signature));
+  private verifySignature(dto: CreateWebhookDepositDto, signature: string): boolean {
+    const { amount, currency, toAccountId } = dto;
+    const payload = JSON.stringify({ amount, currency, toAccountId });
+    const hash = crypto.createHmac('sha256', this.webhookSecret).update(payload).digest('hex');
+
+    const hashBuf = Buffer.from(hash, 'hex');
+    const sigBuf = Buffer.from(signature, 'hex');
+    if (hashBuf.length !== sigBuf.length) return false;
+
+    return crypto.timingSafeEqual(hashBuf, sigBuf);
   }
 }

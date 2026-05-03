@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -19,9 +20,11 @@ export class Transfer {
   @PrimaryGeneratedColumn()
   transactionId: number;
 
+  @Index()
   @Column()
   fromAccountId: number;
 
+  @Index()
   @Column()
   toAccountId: number;
 
@@ -33,6 +36,9 @@ export class Transfer {
 
   @Column({ type: 'enum', enum: Status })
   status: Status;
+
+  @Column({ nullable: true })
+  note: string | null;
 
   @CreateDateColumn()
   createdAt: Date;
