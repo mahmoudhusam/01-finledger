@@ -35,13 +35,16 @@ export async function apiFetch<T>(
   path: string,
   options?: RequestInit & { token?: string },
 ): Promise<T> {
-  const headers: HeadersInit = {
+  const { token, headers: callerHeaders, ...fetchOptions } = options ?? {};
+
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    ...(callerHeaders as Record<string, string>),
   };
-  if (options?.token) {
-    headers['Authorization'] = `Bearer ${options.token}`;
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
-  const { token, ...fetchOptions } = options ?? {};
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...fetchOptions,
