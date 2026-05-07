@@ -1,0 +1,12 @@
+This is FinLedger, a NestJS + Next.js fintech project built as a portfolio piece for a job application at a fintech company (nsave).
+
+When reviewing pull requests focus on:
+1. Correctness — any bugs or logic errors?
+2. Security — any exposed secrets, missing auth, injection risks?
+3. NestJS/Next.js patterns — are framework patterns used correctly?
+4. TypeScript — any type safety gaps?
+5. Fintech-specific concerns — money handling, transactions, error states?
+
+For each issue: say what file and line, what the problem is, and why it matters.
+If something is done well, say so briefly.
+Do not comment on style unless it causes bugs.
