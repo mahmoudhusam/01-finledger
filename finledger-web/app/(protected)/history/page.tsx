@@ -6,9 +6,10 @@ import { redirect } from 'next/navigation';
 export default async function HistoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ cursor?: string }>;
+  searchParams: Promise<{ cursor?: string | string[] }>;
 }) {
-  const { cursor } = await searchParams;
+  const { cursor: rawCursor } = await searchParams;
+  const cursor = Array.isArray(rawCursor) ? rawCursor[0] : rawCursor;
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('accessToken')?.value;
 
