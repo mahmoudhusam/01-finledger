@@ -113,6 +113,8 @@ export default function TransferForm({ accounts }: { accounts: Account[] }) {
       <input
         type="number"
         placeholder="Amount"
+        step="0.01"
+        inputMode="decimal"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         required

@@ -1,12 +1,19 @@
-import { Account, apiFetch, PaginatedResult } from '@/lib/api';
+import { Account, apiFetch, ApiError, PaginatedResult } from '@/lib/api';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import TransferForm from './TransferForm';
 
 export default async function TransferPage() {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('accessToken')?.value;
 
-  const result = await apiFetch<PaginatedResult<Account>>('/accounts', { token: accessToken });
+  let result: PaginatedResult<Account>;
+  try {
+    result = await apiFetch<PaginatedResult<Account>>('/accounts', { token: accessToken });
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 401) redirect('/login');
+    throw err;
+  }
 
   return (
     <div className="min-h-screen p-8">

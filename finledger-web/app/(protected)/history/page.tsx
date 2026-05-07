@@ -1,4 +1,4 @@
-import { apiFetch, PaginatedResult, Transfer } from '@/lib/api';
+import { apiFetch, ApiError, PaginatedResult, Transfer } from '@/lib/api';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -22,9 +22,13 @@ export default async function HistoryPage({
   }
 
   const url = cursor ? `/transfer?cursor=${encodeURIComponent(cursor)}` : '/transfer';
-  const result = await apiFetch<PaginatedResult<Transfer>>(url, {
-    token: accessToken,
-  });
+  let result: PaginatedResult<Transfer>;
+  try {
+    result = await apiFetch<PaginatedResult<Transfer>>(url, { token: accessToken });
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 401) redirect('/login');
+    throw err;
+  }
 
   const statusColors: Record<string, string> = {
     completed: 'bg-green-100 text-green-800',

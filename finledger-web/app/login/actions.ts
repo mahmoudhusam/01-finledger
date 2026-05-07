@@ -24,7 +24,7 @@ export async function loginAction(email: string, password: string) {
     secure: isProduction,
     sameSite: 'lax' as const,
     path: '/',
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: 60 * 60 * 24 * 7,
   };
 
   cookieStore.set('accessToken', data.accessToken, accessTokenCookieOptions);

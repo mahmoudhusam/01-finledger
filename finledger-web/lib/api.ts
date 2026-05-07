@@ -1,5 +1,12 @@
 const API_BASE_URL = process.env.API_URL || 'http://localhost:3000';
 
+export class ApiError extends Error {
+  constructor(public readonly status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 export type Account = {
   accountId: number;
   userId: number;
@@ -50,7 +57,7 @@ export async function apiFetch<T>(
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
+    throw new ApiError(response.status, `API request failed: ${response.status} ${response.statusText} - ${errorText}`);
   }
 
   return response.json() as Promise<T>;
