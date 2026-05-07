@@ -15,7 +15,8 @@ export default function LoginPage() {
     setIsPending(true);
     try {
       await loginAction(email, password);
-    } catch {
+    } catch (err) {
+      if (typeof err === 'object' && err !== null && 'digest' in err) throw err;
       setError('Login failed. Please check your credentials and try again.');
     } finally {
       setIsPending(false);

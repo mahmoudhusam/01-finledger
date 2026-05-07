@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, SyntheticEvent } from 'react';
-import { Account } from '@/lib/api';
+import type { Account } from '@/lib/api';
 import { transferAction } from './actions';
 import { z } from 'zod';
 
@@ -9,7 +9,13 @@ const transferSchema = z
   .object({
     fromAccountId: z.coerce.number().positive('From account is required'),
     toAccountId: z.coerce.number().positive('To account is required'),
-    amount: z.number().positive('Amount must be greater than zero').refine(v => /^\d+(\.\d{1,2})?$/.test(String(v)), 'Max 2 decimal places'),
+    amount: z.string()
+      .regex(/^\d+(\.\d{1,2})?$/, 'Invalid amount — use format like 10.50')
+      .transform((val) => {
+        const [dollars, cents = ''] = val.split('.');
+        return parseInt(dollars, 10) * 100 + parseInt(cents.padEnd(2, '0'), 10);
+      })
+      .refine((cents) => cents > 0, 'Amount must be greater than zero'),
     note: z.string().optional(),
   })
   .refine((data) => data.toAccountId !== data.fromAccountId, {
@@ -38,7 +44,7 @@ export default function TransferForm({ accounts }: { accounts: Account[] }) {
       const parsed = transferSchema.parse({
         fromAccountId,
         toAccountId,
-        amount: parseFloat(amount),
+        amount,
         note,
       });
 
@@ -47,13 +53,10 @@ export default function TransferForm({ accounts }: { accounts: Account[] }) {
         throw new Error('Selected from account is invalid');
       }
 
-      const [dollars, cents='0'] = amount.trim().split('.');
-      const amountInCents = parseInt(dollars) * 100 + parseInt(cents.padEnd(2, '0').slice(0, 2));
-
       await transferAction(
         parsed.fromAccountId,
         parsed.toAccountId,
-        amountInCents,
+        parsed.amount,
         fromAccount.currency,
         idempotencyKeyRef.current,
         note || undefined,
