@@ -9,7 +9,7 @@ const transferSchema = z
   .object({
     fromAccountId: z.coerce.number().positive('From account is required'),
     toAccountId: z.coerce.number().positive('To account is required'),
-    amount: z.number().positive('Amount must be greater than zero'),
+    amount: z.number().positive('Amount must be greater than zero').refine(v => /^\d+(\.\d{1,2})?$/.test(String(v)), 'Max 2 decimal places'),
     note: z.string().optional(),
   })
   .refine((data) => data.toAccountId !== data.fromAccountId, {
@@ -43,13 +43,18 @@ export default function TransferForm({ accounts }: { accounts: Account[] }) {
       });
 
       const fromAccount = accounts.find((a) => a.accountId === parsed.fromAccountId);
-      const amountInCents = Math.round(parsed.amount * 100);
+      if (!fromAccount) {
+        throw new Error('Selected from account is invalid');
+      }
+
+      const [dollars, cents=''] = amount.trim().split('.');
+      const amountInCents = parseInt(dollars) * 100 + parseInt(cents.padEnd(2, '0').slice(0, 2));
 
       await transferAction(
         parsed.fromAccountId,
         parsed.toAccountId,
         amountInCents,
-        fromAccount!.currency,
+        fromAccount.currency,
         idempotencyKeyRef.current,
         note || undefined,
       );

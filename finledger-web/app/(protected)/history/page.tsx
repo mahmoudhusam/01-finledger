@@ -1,6 +1,7 @@
 import { apiFetch, PaginatedResult, Transfer } from '@/lib/api';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 export default async function HistoryPage({
   searchParams,
@@ -11,10 +12,15 @@ export default async function HistoryPage({
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('accessToken')?.value;
 
-  const payload = JSON.parse(Buffer.from(accessToken!.split('.')[1], 'base64').toString('utf-8'));
-  const currentUserId = payload.sub;
+  let currentUserId: number;
+  try {
+    const payload = JSON.parse(Buffer.from(accessToken!.split('.')[1], 'base64').toString('utf-8'));
+    currentUserId = payload.sub;
+  } catch{
+    redirect('/login');
+  }
 
-  const url = cursor ? `/transfer?cursor=${cursor}` : '/transfer';
+  const url = cursor ? `/transfers?cursor=${encodeURIComponent(cursor)}` : '/transfer';
   const result = await apiFetch<PaginatedResult<Transfer>>(url, {
     token: accessToken,
   });
