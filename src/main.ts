@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from '@common/filters/http-exception.filter';
 import { LoggingInterceptor } from '@common/interceptors/logging.interceptor';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { VersioningType } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,6 +19,11 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
 
   if (process.env.NODE_ENV !== 'production') {
     const swaggerOptions = new DocumentBuilder()
