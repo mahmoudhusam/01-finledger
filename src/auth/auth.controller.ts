@@ -6,6 +6,7 @@ import { RegisterDto } from './dto/register.dto';
 import { GetUser } from '@/common/decorators/get-user.decorator';
 import { JwtGuard } from '@/common/guards/jwt.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -15,6 +16,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'The user has been successfully registered.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('register')
   async register(@Body() createUserDto: RegisterDto) {
     return this.authService.register(createUserDto);
@@ -23,6 +25,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiResponse({ status: 200, description: 'The user has been successfully logged in.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto.email, loginDto.password);
