@@ -37,13 +37,10 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const { token, headers: callerHeaders, ...fetchOptions } = options ?? {};
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(callerHeaders as Record<string, string>),
-  };
-
+  const headers = new Headers(callerHeaders);
+  headers.set('Content-Type', 'application/json');
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {

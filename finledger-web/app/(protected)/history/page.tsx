@@ -14,13 +14,14 @@ export default async function HistoryPage({
 
   let currentUserId: number;
   try {
-    const payload = JSON.parse(Buffer.from(accessToken!.split('.')[1], 'base64').toString('utf-8'));
+    const [, payloadSegment] = accessToken!.split('.');
+    const payload = JSON.parse(Buffer.from(payloadSegment, 'base64url').toString('utf-8'));
     currentUserId = payload.sub;
-  } catch{
+  } catch {
     redirect('/login');
   }
 
-  const url = cursor ? `/transfers?cursor=${encodeURIComponent(cursor)}` : '/transfer';
+  const url = cursor ? `/transfer?cursor=${encodeURIComponent(cursor)}` : '/transfer';
   const result = await apiFetch<PaginatedResult<Transfer>>(url, {
     token: accessToken,
   });

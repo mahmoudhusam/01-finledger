@@ -47,7 +47,7 @@ export default function TransferForm({ accounts }: { accounts: Account[] }) {
         throw new Error('Selected from account is invalid');
       }
 
-      const [dollars, cents=''] = amount.trim().split('.');
+      const [dollars, cents='0'] = amount.trim().split('.');
       const amountInCents = parseInt(dollars) * 100 + parseInt(cents.padEnd(2, '0').slice(0, 2));
 
       await transferAction(
