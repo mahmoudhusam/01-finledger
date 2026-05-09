@@ -11,7 +11,7 @@ import { RequestIdInterceptor } from './common/interceptors/request-id.intercept
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalFilters(new HttpExceptionFilter(), new ThrottlerExceptionFilter());
+  app.useGlobalFilters(new ThrottlerExceptionFilter(), new HttpExceptionFilter());
   app.useGlobalInterceptors(new LoggingInterceptor(), new RequestIdInterceptor());
   app.useGlobalPipes(
     new ValidationPipe({
