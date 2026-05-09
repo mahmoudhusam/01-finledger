@@ -6,12 +6,13 @@ import { LoggingInterceptor } from '@common/interceptors/logging.interceptor';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { VersioningType } from '@nestjs/common';
 import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
+import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalFilters(new HttpExceptionFilter(), new ThrottlerExceptionFilter());
-  app.useGlobalInterceptors(new LoggingInterceptor());
+  app.useGlobalInterceptors(new LoggingInterceptor(), new RequestIdInterceptor());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
