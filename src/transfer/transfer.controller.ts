@@ -15,13 +15,19 @@ import { CreateTransferDto } from './dto/create-transfer.dto';
 import { JwtGuard } from '@/common/guards/jwt.guard';
 import { GetUser } from '@/common/decorators/get-user.decorator';
 import { IdempotencyInterceptor } from '@/common/interceptors/idempotency.interceptor';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('transfer')
+@ApiBearerAuth()
 @UseGuards(JwtGuard)
 @Controller('transfer')
 export class TransferController {
   constructor(private readonly transferService: TransferService) {}
 
   @UseInterceptors(IdempotencyInterceptor)
+  @ApiOperation({ summary: 'Create a new transfer' })
+  @ApiResponse({ status: 201, description: 'The transfer has been successfully created.' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
   @Post()
   async transfer(
     @Body() createTransferDto: CreateTransferDto,
@@ -30,6 +36,9 @@ export class TransferController {
     return this.transferService.transfer(createTransferDto, user.userId);
   }
 
+  @ApiOperation({ summary: 'List all transfers' })
+  @ApiResponse({ status: 200, description: 'The transfers have been successfully retrieved.' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
   @Get()
   async listTransfers(
     @Query(
@@ -43,6 +52,10 @@ export class TransferController {
     return this.transferService.listTransfers(user!.userId, limit, cursor);
   }
 
+  @ApiOperation({ summary: 'Get transfer by ID' })
+  @ApiResponse({ status: 200, description: 'The transfer has been successfully retrieved.' })
+  @ApiResponse({ status: 404, description: 'Transfer not found.' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
   @Get(':id')
   async getTransferById(@Param('id') id: string, @GetUser() user: { userId: number }) {
     return this.transferService.getTransferById(parseInt(id), user.userId);

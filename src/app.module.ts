@@ -12,6 +12,9 @@ import { AccountsModule } from './accounts/accounts.module';
 import { TransferModule } from './transfer/transfer.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { RedisModule } from './common/redis/redis.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -37,6 +40,12 @@ import { RedisModule } from './common/redis/redis.module';
       }),
     }),
 
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     UsersModule,
 
     AuthModule,
@@ -54,6 +63,10 @@ import { RedisModule } from './common/redis/redis.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

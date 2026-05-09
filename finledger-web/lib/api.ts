@@ -50,7 +50,7 @@ export async function apiFetch<T>(
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${API_BASE_URL}/v1${path}`, {
     ...fetchOptions,
     headers,
   });
