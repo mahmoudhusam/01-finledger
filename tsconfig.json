@@ -32,6 +32,7 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": false,
     "strict": false,
+    "types": ["jest", "node"],
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "moduleResolution": "node"
