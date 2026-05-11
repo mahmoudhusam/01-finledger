@@ -15,6 +15,7 @@ import { RedisModule } from './common/redis/redis.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 
     WebhooksModule,
     RedisModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
