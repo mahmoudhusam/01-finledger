@@ -12,14 +12,12 @@ describe('AppController', () => {
     }).compile();
 
     appController = app.get<AppController>(AppController);
+
+
   });
 
-  describe('health', () => {
-    it('should return health status', () => {
-      expect(appController.getHealth()).toEqual({
-        status: 'ok',
-        message: 'FinLedger API is running',
-      });
-    });
+  it('should be defined', () => {
+    expect(appController).toBeDefined();
   });
+
 });

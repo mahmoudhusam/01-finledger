@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { WebhooksController } from '../../src/webhooks/webhooks.controller';
 import { WebhooksService } from '../../src/webhooks/webhooks.service';
+import { JwtGuard } from '../../src/common/guards/jwt.guard';
 
 describe('WebhooksController', () => {
   let controller: WebhooksController;
@@ -8,8 +9,11 @@ describe('WebhooksController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [WebhooksController],
-      providers: [WebhooksService],
-    }).compile();
+      providers: [{ provide: WebhooksService, useValue: {} }],
+    })
+      .overrideGuard(JwtGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<WebhooksController>(WebhooksController);
   });
