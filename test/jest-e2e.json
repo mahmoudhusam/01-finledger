@@ -3,7 +3,14 @@
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
-  "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+  "testTimeout": 30000,
+  "transform": { "^.+\\.(t|j)s$": "ts-jest" },
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/../src/$1",
+    "^@common/(.*)$": "<rootDir>/../src/common/$1",
+    "^@auth/(.*)$": "<rootDir>/../src/auth/$1",
+    "^@guards/(.*)$": "<rootDir>/../src/guards/$1",
+    "^@utils/(.*)$": "<rootDir>/../src/utils/$1",
+    "^@config/(.*)$": "<rootDir>/../src/config/$1"
   }
 }

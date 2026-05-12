@@ -32,6 +32,7 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": false,
     "strict": false,
+    "types": ["jest", "node"],
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "moduleResolution": "node"
@@ -43,7 +44,9 @@
     "test/transfer/transfer.service.spec.ts",
     "test/transfer/transfer.controller.spec.ts",
     "test/webhooks/webhooks.service.spec.ts",
-    "test/webhooks/webhooks.controller.spec.ts"
+    "test/webhooks/webhooks.controller.spec.ts",
+    "test/health/health.controller.spec.ts",
+    "test/health/health.service.spec.ts"
   ],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }

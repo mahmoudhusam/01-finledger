@@ -13,11 +13,21 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
-    await this.client.connect();
+    try {
+      await this.client.connect();
+      console.log('Connected to Redis');
+    } catch (error) {
+      console.error('Failed to connect to Redis:', error);
+    }
   }
 
   async onModuleDestroy() {
-    await this.client.quit();
+    try {
+      await this.client.quit();
+      console.log('Disconnected from Redis');
+    } catch (error) {
+      console.error('Failed to disconnect from Redis:', error);
+    }
   }
 
   async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
@@ -39,5 +49,16 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async setNx(key: string, value: string, ttlSeconds: number): Promise<boolean> {
     const result = await this.client.set(key, value, { EX: ttlSeconds, NX: true });
     return result === 'OK';
+  }
+
+  async ping(): Promise<boolean> {
+    try {
+      if (!this.client.isReady) return false;
+      await this.client.ping();
+      return true;
+    } catch (error) {
+      console.error('Redis ping failed:', error);
+      return false;
+    }
   }
 }
